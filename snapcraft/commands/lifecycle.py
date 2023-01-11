@@ -128,6 +128,11 @@ class _LifecycleCommand(BaseCommand, abc.ABC):
         if not self.name:
             raise RuntimeError("command name not specified")
 
+        emit.debug("changing to /root/project")
+        if utils.is_managed_mode():
+            os.chdir("/root/project")
+            emit.debug("changed to /root/project")
+
         emit.debug(f"lifecycle command: {self.name!r}, arguments: {parsed_args!r}")
         parts_lifecycle.run(self.name, parsed_args)
 

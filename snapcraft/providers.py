@@ -51,7 +51,7 @@ def capture_logs_from_instance(instance: executor.Executor) -> None:
     """
     source_log_path = get_managed_environment_log_path()
     with instance.temporarily_pull_file(
-        source=source_log_path, missing_ok=True
+            source=source_log_path, missing_ok=True
     ) as log_path:
         if log_path:
             emit.debug("Logs retrieved from managed instance:")
@@ -76,9 +76,9 @@ def ensure_provider_is_available(provider: Provider) -> None:
     """
     if isinstance(provider, LXDProvider):
         if not LXDProvider.is_provider_installed() and not confirm_with_user(
-            "LXD is required but not installed. Do you wish to install LXD and configure "
-            "it with the defaults?",
-            default=False,
+                "LXD is required but not installed. Do you wish to install LXD and configure "
+                "it with the defaults?",
+                default=False,
         ):
             raise ProviderError(
                 "LXD is required, but not installed. Visit https://snapcraft.io/lxd "
@@ -87,9 +87,9 @@ def ensure_provider_is_available(provider: Provider) -> None:
         LXDProvider.ensure_provider_is_available()
     elif isinstance(provider, MultipassProvider):
         if not MultipassProvider.is_provider_installed() and not confirm_with_user(
-            "Multipass is required but not installed. Do you wish to install Multipass"
-            " and configure it with the defaults?",
-            default=False,
+                "Multipass is required but not installed. Do you wish to install Multipass"
+                " and configure it with the defaults?",
+                default=False,
         ):
             raise ProviderError(
                 "Multipass is required, but not installed. Visit https://multipass.run/"
@@ -101,11 +101,11 @@ def ensure_provider_is_available(provider: Provider) -> None:
 
 
 def get_base_configuration(
-    *,
-    alias: bases.BuilddBaseAlias,
-    instance_name: str,
-    http_proxy: Optional[str] = None,
-    https_proxy: Optional[str] = None,
+        *,
+        alias: bases.BuilddBaseAlias,
+        instance_name: str,
+        http_proxy: Optional[str] = None,
+        https_proxy: Optional[str] = None,
 ) -> bases.BuilddBase:
     """Create a BuilddBase configuration for rockcraft."""
     environment = get_command_environment(
@@ -136,7 +136,7 @@ def get_base_configuration(
 
 
 def get_command_environment(
-    http_proxy: Optional[str] = None, https_proxy: Optional[str] = None
+        http_proxy: Optional[str] = None, https_proxy: Optional[str] = None
 ) -> Dict[str, Optional[str]]:
     """Construct an environment needed to execute a command.
 
@@ -173,7 +173,7 @@ def get_command_environment(
 
 
 def get_instance_name(
-    *, project_name: str, project_path: Path, build_on: str, build_for: str
+        *, project_name: str, project_path: Path, build_on: str, build_for: str
 ) -> str:
     """Formulate the name for an instance using each of the given parameters.
 
@@ -246,15 +246,19 @@ def get_provider(provider: Optional[str] = None) -> Provider:
 
     # return the chosen provider
     if chosen_provider == "lxd":
-        return LXDProvider(lxd_project="snapcraft")
+        return LXDProvider(lxd_project="snapcraft", lxd_remote=get_remote())
     if chosen_provider == "multipass":
         return MultipassProvider()
 
     raise ValueError(f"unsupported provider specified: {chosen_provider!r}")
 
 
+def get_remote() -> str:
+    return os.getenv("SNAPCRAFT_LXD_REMOTE", default="local")
+
+
 def prepare_instance(
-    instance: executor.Executor, host_project_path: Path, bind_ssh: bool
+        instance: executor.Executor, host_project_path: Path, bind_ssh: bool
 ) -> None:
     """Prepare an instance to run snapcraft.
 
