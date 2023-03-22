@@ -175,6 +175,7 @@ def is_offline() -> bool:
 
 def is_snap() -> bool:
     snap_name = os.environ.get("SNAP_NAME", "")
+    # TODO change to snap_name.starts_with("snapcraft")
     is_snap = snap_name == "snapcraft"
     logger.debug(
         "snapcraft is running as a snap {!r}, "

@@ -112,12 +112,34 @@ class _SnapManager:
         #   and the snap installed in the build environment (_latest_revision) does not
         #   match the one on the host, then a snap injection from the host will take place.
         if not is_installed and self._latest_revision is None:
+            logger.debug(
+                ">>>>> INSTALL for snap_name %s, latest_revision = %s",
+                self.snap_name,
+                self._latest_revision,
+            )
             op = _SnapOp.INSTALL
         elif not is_installed and self._latest_revision is not None:
+            logger.debug(
+                ">>>>> REFRESH for snap_name %s, latest_revision = %s",
+                self.snap_name,
+                self._latest_revision,
+            )
             op = _SnapOp.REFRESH
         elif is_installed and self._latest_revision == host_snap_info["revision"]:
+            logger.debug(
+                ">>>>> NOP for snap_name %s, host_snap_info revision = %s, latest_revision = %s",
+                self.snap_name,
+                host_snap_info["revision"],
+                self._latest_revision,
+            )
             op = _SnapOp.NOP
         elif is_installed and self._latest_revision != host_snap_info["revision"]:
+            logger.debug(
+                ">>>>> INJECT for snap_name %s, host_snap_info revision = %s, latest_revision = %s",
+                self.snap_name,
+                host_snap_info["revision"],
+                self._latest_revision,
+            )
             op = _SnapOp.INJECT
         else:
             # This is a programmatic error
@@ -193,6 +215,16 @@ class _SnapManager:
                     self._remote_snap_dir, "{}.assert".format(host_snap_repo.name)
                 ),
             ]
+            logger.debug(
+                ">>>>> install command for snap_name %s is %s",
+                self.snap_name,
+                install_cmd,
+            )
+            logger.debug(
+                ">>>>> assertion command for snap_name %s is %s",
+                self.snap_name,
+                assertion_ack_cmd,
+            )
 
         elif op == _SnapOp.INSTALL or op == _SnapOp.REFRESH:
             install_cmd = ["snap", op.name.lower()]
@@ -363,6 +395,12 @@ class SnapInjector:
             self._registry_data[snap_name].append(entry)
 
     def add(self, snap_name: str) -> None:
+        logger.debug(
+            ">>>>>> adding snap to snap injector with snap_name=%s, latest_revision=%s, inject_from_host=%s",
+            snap_name,
+            self._get_latest_revision(snap_name),
+            self._inject_from_host
+        )
         self._snaps.append(
             _SnapManager(
                 snap_name=snap_name,
@@ -388,7 +426,9 @@ class SnapInjector:
 
         # Install snaps and assertions.
         for snap in snaps:
+            logger.debug(">>>>> running 'apply' for snap.snap_name=%s", snap.snap_name)
             if snap.get_op() == _SnapOp.INJECT:
+                logger.debug(">>>>> injecting")
                 snap.push_host_snap(file_pusher=self._file_pusher)
                 self._runner(snap.get_assertion_ack_cmd())
             self._runner(snap.get_snap_install_cmd())

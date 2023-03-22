@@ -467,14 +467,45 @@ class Provider(abc.ABC):
             permissions="0644",
         )
 
-    def _setup_snapcraft(self) -> None:
-        self._save_info(
-            data={
-                "base": self.project._get_build_base(),
-                "created-by-snapcraft-version": snapcraft_legacy._get_version(),
-                "host-project-directory": self.project._project_dir,
-            }
+    def _get_snapcraft_snap_name(self) -> str:
+        """Get the name of the snapcraft snap.
+
+        If snapcraft is running as a snap, use the snap name from the environment variable
+        SNAP_INSTANCE. This is required when snapcraft is installed in parallel, because
+        the SNAP_INSTANCE may not be "snapcraft".
+        """
+        snap_instance_name = "SNAP_INSTANCE_NAME"
+        if common.is_snap():
+            snapcraft_snap_name = os.getenv(snap_instance_name)
+
+            if snapcraft_snap_name:
+                logger.debug(
+                    "Using snap name %r from envvar %r.",
+                    snapcraft_snap_name,
+                    snap_instance_name,
+                )
+                return snapcraft_snap_name
+
+            logger.debug(
+                "Using snap snap 'snapcraft' because there is no envvar %r.",
+                snap_instance_name,
+            )
+            return "snapcraft"
+
+        logger.debug(
+            "Using snap name 'snapcraft' because snapcraft is not running as a snap."
         )
+        return "snapcraft"
+
+    def _setup_snapcraft(self) -> None:
+        data = {
+            "base": self.project._get_build_base(),
+            "created-by-snapcraft-version": snapcraft_legacy._get_version(),
+            "host-project-directory": self.project._project_dir,
+        }
+        logger.debug(">>>>>>>> base=%s", data)
+
+        self._save_info(data=data)
 
         registry_filepath = os.path.join(
             self.provider_project_dir, "snap-registry.yaml"
@@ -505,7 +536,9 @@ class Provider(abc.ABC):
 
         # Inject snapcraft and its base.
         snap_injector.add(snap_name="core20")
-        snap_injector.add(snap_name="snapcraft")
+
+        snap_injector.add(snap_name=self._get_snapcraft_snap_name())
+        logger.debug(">>>>> added snapcraft to snap injector")
 
         snap_injector.apply()
 

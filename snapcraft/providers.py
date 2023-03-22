@@ -34,6 +34,7 @@ from snapcraft.utils import (
     get_managed_environment_log_path,
     get_managed_environment_project_path,
     get_managed_environment_snap_channel,
+    is_snapcraft_running_from_snap,
 )
 
 SNAPCRAFT_BASE_TO_PROVIDER_BASE = {
@@ -160,6 +161,27 @@ def ensure_provider_is_available(provider: Provider) -> None:
         raise ProviderError("cannot install unknown provider")
 
 
+def get_snap_name() -> str:
+    """Get the name of the snapcraft snap.
+
+    If snapcraft is running as a snap, use the snap name from the environment variable
+    SNAP_INSTANCE. This is required when snapcraft is installed in parallel, because
+    the SNAP_INSTANCE may not be "snapcraft".
+    """
+    snap_instance_name = "SNAP_INSTANCE_NAME"
+    if is_snapcraft_running_from_snap():
+        snap_name = os.getenv(snap_instance_name)
+
+        if snap_name:
+            emit.debug(f"Using snap name {snap_name!r} from envvar {snap_instance_name!r}")
+            return snap_name
+
+        emit.debug(f"Using snap name 'snapcraft' because there is no envvar {snap_instance_name!r}.")
+        return "snapcraft"
+
+    emit.debug("Using snap name 'snapcraft' because snapcraft is not running as a snap.")
+    return "snapcraft"
+
 def get_base_configuration(
     *,
     alias: bases.BuilddBaseAlias,
@@ -176,6 +198,7 @@ def get_base_configuration(
     # install snapcraft from the store's stable channel
     snap_channel = get_managed_environment_snap_channel()
     if sys.platform != "linux" and not snap_channel:
+        # TODO: add a nice little note here to use the envvar to avoid this default
         snap_channel = "stable"
 
     return bases.BuilddBase(
@@ -185,7 +208,7 @@ def get_base_configuration(
         hostname=instance_name,
         snaps=[
             bases.buildd.Snap(
-                name="snapcraft",
+                name=get_snap_name(),
                 channel=snap_channel,
                 classic=True,
             )
