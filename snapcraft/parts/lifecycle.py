@@ -52,6 +52,7 @@ from .parts import PartsLifecycle, launch_shell
 from .project_check import run_project_checks
 from .setup_assets import setup_assets
 from .update_metadata import update_project_metadata
+from ._debug_split import split_debug_info
 
 if TYPE_CHECKING:
     import argparse
@@ -649,6 +650,15 @@ def _set_step_environment(step_info: StepInfo) -> bool:
 
 def _patch_elf(step_info: StepInfo) -> bool:
     """Patch rpath and interpreter in ELF files for classic mode."""
+    emit.progress("Extracting debug symbols")
+
+    debug_files, debug_dirs = split_debug_info(
+        debug_dir=Path("debug"),
+        prime_dir=Path("prime"),
+        file_paths=step_info.state.files,
+    )
+    emit.progress(f"{debug_files=}\n{debug_dirs=}")
+
     if "enable-patchelf" not in step_info.build_attributes:
         emit.debug(f"patch_elf: not enabled for part {step_info.part_name!r}")
         return True
