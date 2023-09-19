@@ -102,9 +102,6 @@ class GitRepo:
         author = pygit2.Signature("auto commit", "auto commit")
 
         try:
-            # pylint: disable=line-too-long
-            # todo: figure out if `--no-gpg-sign` is required to avoid this problem:
-            # https://github.com/snapcore/snapcraft/pull/2837/commits/987b39053429b23b829966837bf6b8c8dd3b9e28
             self._repo.create_commit("HEAD", author, author, message, tree, [])
         except pygit2.GitError as error:
             raise GitError(
@@ -139,6 +136,8 @@ class GitRepo:
                 f"Could not initialize a git repository in {str(self.path)!r}."
             ) from error
 
+    # TODO: add --force
+    # TODO: allow pushing to an arbitrary branch
     def push_url(self, remote_url: str, refspec: str = "HEAD") -> None:
         """Push a refspec to a remote url.
 
