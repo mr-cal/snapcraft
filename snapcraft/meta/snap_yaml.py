@@ -257,6 +257,7 @@ class SnapMetadata(SnapcraftMetadata):
     system_usernames: Optional[Dict[str, Any]]
     provenance: Optional[str]
     links: Optional[Links]
+    components: Optional[Dict[str, Any]]
 
     @classmethod
     def unmarshal(cls, data: Dict[str, Any]) -> "SnapMetadata":
@@ -483,6 +484,9 @@ def get_metadata_from_project(
         system_usernames=project.system_usernames,
         provenance=project.provenance,
         links=links if links else None,
+        # TODO: snapstore review-tools fails on this, pending https://code.launchpad.net/~jslarraz/review-tools/+git/review-tools/+merge/462423
+        # TODO: version and architecture keywords for components are not allowed in the snap.yaml
+        components=project.components,
     )
     if project.passthrough:
         for name, value in project.passthrough.items():

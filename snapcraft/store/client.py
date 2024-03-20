@@ -177,6 +177,7 @@ class LegacyStoreClientCLI:
 
     def __init__(self, ephemeral=False):
         self.store_client = get_client(ephemeral=ephemeral)
+        emit.debug(f"Using {self.store_client!r}")
         self._base_url = get_store_url()
 
     def login(
@@ -433,6 +434,7 @@ class LegacyStoreClientCLI:
         snap_file_size: int,
         built_at: Optional[str],
         channels: Optional[Sequence[str]],
+        components: Optional[Sequence[str]],
     ) -> int:
         """Notify an upload to the Snap Store.
 
@@ -454,6 +456,8 @@ class LegacyStoreClientCLI:
             data["built_at"] = built_at
         if channels is not None:
             data["channels"] = channels
+        if components:
+            data["components"] = components
 
         response = self.request(
             "POST",
@@ -527,6 +531,7 @@ class OnPremStoreClientCLI(LegacyStoreClientCLI):
         snap_file_size: int,
         built_at: Optional[str],
         channels: Optional[Sequence[str]],
+        components: Optional[Sequence[str]],
     ) -> int:
         if channels:
             raise errors.SnapcraftError("Releasing during currently unsupported")
